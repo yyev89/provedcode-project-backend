@@ -31,31 +31,32 @@ jobs:
       - name: Test
         run: mvn -B clean test
 
-  sonarcloud-scan:
-    name: Analyze code with Sonar
+  qodana:
+    name: Scan code with Qodana
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
+          fetch-depth: 0  # a full history is required for pull request analysis
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@v2024.2
         with:
-          java-version: 17
-          distribution: 'temurin'
-
-      - name: Build and analyze
+          pr-mode: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=yyev89_provedcode-backend
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+          QODANA_ENDPOINT: 'https://qodana.cloud'
 
   docker-image:
+    name: Build and push Docker image
     runs-on: ubuntu-22.04
     permissions:
       packages: write 
-    needs: [build-test, sonarcloud-scan]
+    needs: [build-test, qodana]
 
     steps:
       - name: Set image tag as short SHA
