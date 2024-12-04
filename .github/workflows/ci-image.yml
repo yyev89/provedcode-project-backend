@@ -99,9 +99,8 @@ jobs:
         uses: docker/build-push-action@v6
         env:
           DOCKER_BUILD_SUMMARY: false
-          IMAGE_TAG: ${{ needs.generate-image-tag.outputs.image_tag }}
         with:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${IMAGE_TAG}
+            ghcr.io/${{ github.repository }}:${{ needs.generate-image-tag.outputs.image_tag }}
